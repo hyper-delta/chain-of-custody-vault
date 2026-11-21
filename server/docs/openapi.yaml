@@ -1,0 +1,12 @@
+openapi: 3.0.3
+info:
+  title: Chain-of-Custody Vault API
+  version: 0.1.0
+servers:
+  - url: /api/v1
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200': {description: API is healthy}
