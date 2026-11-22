@@ -19,19 +19,19 @@ export function createApp() {
   const app = express();
   app.disable('x-powered-by');
   app.use(helmet());
-  app.use(cors({ origin: (process.env.CORS_ORIGINS || 'http://localhost:5173').split(',').map((v) => v.trim()), methods: ['GET', 'POST'], allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'] }));
+  const origins = (process.env.CORS_ORIGINS || 'http://localhost:5173').split(',').map((value) => value.trim()).filter(Boolean);
+  app.use(cors({ origin: origins, methods: ['GET', 'POST'], allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'] }));
   app.use(requestId);
   app.use(pinoHttp({ logger, genReqId: (req) => req.requestId }));
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: false }));
 
-  const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: Number(process.env.AUTH_RATE_LIMIT_MAX) || 10, standardHeaders: 'draft-7', legacyHeaders: false });
-  app.use('/api/v1/auth', authLimiter);
+  app.use('/api/v1/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: Number(process.env.AUTH_RATE_LIMIT_MAX) || 10, standardHeaders: 'draft-7', legacyHeaders: false }));
   app.use('/api/v1/auth', authRoutes(validate));
   app.use('/api/v1', itemRoutes(validate));
   app.use('/api/v1/audit', auditRoutes);
-
   app.get('/api/v1/health', (_req, res) => res.json({ status: 'ok', service: 'chain-of-custody-vault' }));
+
   try {
     const spec = YAML.parse(fs.readFileSync(new URL('../docs/openapi.yaml', import.meta.url), 'utf8'));
     app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec));

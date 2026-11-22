@@ -1,12 +1,62 @@
 openapi: 3.0.3
 info:
   title: Chain-of-Custody Vault API
-  version: 0.1.0
+  version: 1.0.0
 servers:
   - url: /api/v1
 paths:
   /health:
     get:
-      summary: Health check
       responses:
-        '200': {description: API is healthy}
+        '200': { description: API is healthy }
+  /auth/register:
+    post:
+      responses:
+        '201': { description: Collector account created }
+        '409': { description: Email already exists }
+  /auth/login:
+    post:
+      responses:
+        '200': { description: Access and refresh tokens }
+        '401': { description: Invalid credentials }
+  /auth/refresh:
+    post:
+      responses:
+        '200': { description: Rotated token pair }
+        '401': { description: Invalid refresh token }
+  /auth/logout:
+    post:
+      responses:
+        '204': { description: Refresh tokens revoked }
+  /auth/me:
+    get:
+      responses:
+        '200': { description: Current user and permissions }
+  /items:
+    get:
+      responses:
+        '200': { description: Paginated item list }
+    post:
+      responses:
+        '201': { description: Item registered }
+  /items/{id}/transfer:
+    post:
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '201': { description: Transfer recorded }
+        '409': { description: Stale item or invalid transition }
+  /items/{id}/status:
+    post:
+      responses:
+        '201': { description: Status changed }
+  /items/{id}/evidence:
+    post:
+      responses:
+        '201': { description: Evidence attached }
+        '413': { description: File too large }
+        '415': { description: MIME type rejected }
+  /items/{id}/verify:
+    get:
+      responses:
+        '200': { description: Verification result }
